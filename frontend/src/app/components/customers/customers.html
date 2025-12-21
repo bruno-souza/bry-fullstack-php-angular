@@ -1,0 +1,300 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-bry-dark">Clientes</h1>
+    <button (click)="toggleForm()" class="btn-primary">
+      {{ showForm ? 'Cancelar' : '+ Novo Cliente' }}
+    </button>
+  </div>
+
+  <!-- Formulário -->
+  <div *ngIf="showForm" class="card mb-6">
+    <h2 class="text-xl font-semibold mb-4 text-bry-dark">
+      {{ isEditing ? 'Editar Cliente' : 'Novo Cliente' }}
+    </h2>
+    
+    <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Login -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Login * (sem acentuação)</label>
+          <input 
+            type="text" 
+            formControlName="login" 
+            class="input-field"
+            [class.border-red-500]="isFieldInvalid('login')"
+          />
+          <p *ngIf="isFieldInvalid('login')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('login') }}
+          </p>
+        </div>
+
+        <!-- Nome -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nome * (sem acentuação)</label>
+          <input 
+            type="text" 
+            formControlName="name" 
+            class="input-field"
+            [class.border-red-500]="isFieldInvalid('name')"
+          />
+          <p *ngIf="isFieldInvalid('name')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('name') }}
+          </p>
+        </div>
+
+        <!-- CPF -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">CPF * (11 dígitos)</label>
+          <input 
+            type="text" 
+            formControlName="cpf" 
+            mask="000.000.000-00"
+            [dropSpecialCharacters]="true"
+            class="input-field"
+            placeholder="000.000.000-00"
+            [class.border-red-500]="isFieldInvalid('cpf')"
+          />
+          <p *ngIf="isFieldInvalid('cpf')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('cpf') }}
+          </p>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
+          <input 
+            type="email" 
+            formControlName="email" 
+            class="input-field"
+            [class.border-red-500]="isFieldInvalid('email')"
+          />
+          <p *ngIf="isFieldInvalid('email')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('email') }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Endereço -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Endereço *</label>
+        <input 
+          type="text" 
+          formControlName="address" 
+          class="input-field"
+          [class.border-red-500]="isFieldInvalid('address')"
+        />
+        <p *ngIf="isFieldInvalid('address')" class="text-red-500 text-sm mt-1">
+          {{ getErrorMessage('address') }}
+        </p>
+      </div>
+
+      <!-- Senha -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Senha * {{ isEditing ? '(deixe em branco para não alterar)' : '(mínimo 6 caracteres)' }}
+        </label>
+        <input 
+          type="password" 
+          formControlName="password" 
+          class="input-field"
+          [class.border-red-500]="isFieldInvalid('password')"
+        />
+        <p *ngIf="isFieldInvalid('password')" class="text-red-500 text-sm mt-1">
+          {{ getErrorMessage('password') }}
+        </p>
+      </div>
+
+      <!-- Upload de Documento -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Documento (PDF ou JPG) {{ isEditing ? '(opcional - envie para substituir)' : '' }}
+        </label>
+        <input 
+          type="file" 
+          accept=".pdf,.jpg,.jpeg"
+          (change)="onFileSelected($event)"
+          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-bry-blue file:text-white hover:file:bg-blue-700"
+        />
+        <p class="text-gray-500 text-xs mt-1">Formatos aceitos: PDF, JPG (máx. 2MB)</p>
+      </div>
+
+      <!-- Seleção de Empresas -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Empresas Vinculadas</label>
+        <div class="border rounded p-3 bg-gray-50 max-h-48 overflow-y-auto">
+          <div *ngIf="companies.length === 0" class="text-sm text-gray-500 italic">
+            Nenhuma empresa cadastrada
+          </div>
+          <div *ngFor="let company of companies" class="flex items-center mb-2">
+            <input 
+              type="checkbox" 
+              [id]="'company-' + company.id"
+              [checked]="isCompanySelected(company.id!)"
+              (change)="toggleCompanySelection(company.id!)"
+              class="h-4 w-4 text-bry-blue focus:ring-bry-blue border-gray-300 rounded"
+            />
+            <label [for]="'company-' + company.id" class="ml-2 text-sm text-gray-700 cursor-pointer">
+              {{ company.name }} ({{ company.cnpj | cnpj }})
+            </label>
+          </div>
+        </div>
+        <p class="text-gray-500 text-xs mt-1">Selecione as empresas onde este cliente está vinculado</p>
+      </div>
+
+      <div class="flex gap-2 pt-4">
+        <button type="submit" class="btn-primary">
+          {{ isEditing ? 'Atualizar' : 'Cadastrar' }}
+        </button>
+        <button type="button" (click)="resetForm()" class="btn-secondary">
+          Limpar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabela de Clientes -->
+  <div class="card">
+    <h2 class="text-xl font-semibold mb-4 text-bry-dark">Lista de Clientes</h2>
+    
+    <div *ngIf="customers.length === 0" class="text-center py-8 text-gray-500">
+      Nenhum cliente cadastrado
+    </div>
+
+    <div *ngIf="customers.length > 0" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="table-header">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Login</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nome</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">CPF</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">E-mail</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Endereço</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Empresas</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Documento</th>
+            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let customer of customers" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ customer.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ customer.login }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ customer.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.cpf | cpf }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.email }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">{{ customer.address }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <span *ngIf="customer.companies && customer.companies.length > 0">
+                {{ customer.companies.length }} empresa(s)
+              </span>
+              <span *ngIf="!customer.companies || customer.companies.length === 0" class="text-gray-400">
+                Nenhuma
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <a 
+                *ngIf="customer.document_url" 
+                [href]="customer.document_url" 
+                target="_blank"
+                class="text-bry-blue hover:text-blue-900"
+              >
+                Ver documento
+              </a>
+              <span *ngIf="!customer.document_url" class="text-gray-400">Sem documento</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button (click)="viewCustomer(customer)" class="text-green-600 hover:text-green-900 mr-3">
+                Visualizar
+              </button>
+              <button (click)="editCustomer(customer)" class="text-bry-blue hover:text-blue-900 mr-3">
+                Editar
+              </button>
+              <button (click)="deleteCustomer(customer.id!)" class="text-red-600 hover:text-red-900">
+                Excluir
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal de Visualização -->
+  <div *ngIf="showViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-2xl font-bold text-bry-dark">Detalhes do Cliente</h3>
+        <button (click)="closeViewModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div *ngIf="selectedCustomer" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">ID</label>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedCustomer.id }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Login</label>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedCustomer.login }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nome</label>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedCustomer.name }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">CPF</label>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedCustomer.cpf | cpf }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">E-mail</label>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedCustomer.email }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Endereço</label>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedCustomer.address }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Documento</label>
+            <p class="mt-1 text-sm">
+              <a 
+                *ngIf="selectedCustomer.document_url" 
+                [href]="selectedCustomer.document_url" 
+                target="_blank"
+                class="text-bry-blue hover:text-blue-900"
+              >
+                Ver documento
+              </a>
+              <span *ngIf="!selectedCustomer.document_url" class="text-gray-400 italic">Sem documento</span>
+            </p>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div>
+          <h4 class="text-lg font-semibold text-bry-dark mb-2">Empresas Vinculadas ({{ selectedCustomer.companies?.length || 0 }})</h4>
+          <div *ngIf="selectedCustomer.companies && selectedCustomer.companies.length > 0" class="bg-gray-50 rounded p-3">
+            <ul class="list-disc list-inside space-y-1">
+              <li *ngFor="let company of selectedCustomer.companies" class="text-sm text-gray-700">
+                {{ company.name }} - CNPJ: {{ company.cnpj | cnpj }}
+              </li>
+            </ul>
+          </div>
+          <p *ngIf="!selectedCustomer.companies || selectedCustomer.companies.length === 0" class="text-sm text-gray-500 italic">
+            Nenhuma empresa vinculada
+          </p>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <button (click)="closeViewModal()" class="btn-secondary">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
