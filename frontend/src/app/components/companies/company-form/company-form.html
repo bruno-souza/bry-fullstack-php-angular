@@ -1,0 +1,98 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-bry-dark">
+        {{ isEditing ? 'Editar Empresa' : 'Nova Empresa' }}
+      </h1>
+      <button 
+        type="button"
+        (click)="goBack()"
+        class="text-bry-blue hover:text-blue-700 cursor-pointer"
+      >
+        ← Voltar
+      </button>
+    </div>
+
+    <div class="card">
+      <form [formGroup]="companyForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+            Nome * (sem acentuação)
+          </label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="input-field"
+            [class.border-red-500]="isFieldInvalid('name')"
+          />
+          <p *ngIf="isFieldInvalid('name')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('name') }}
+          </p>
+        </div>
+
+        <div>
+          <label for="cnpj" class="block text-sm font-medium text-gray-700 mb-1">
+            CNPJ * (14 dígitos)
+          </label>
+          <input
+            id="cnpj"
+            type="text"
+            formControlName="cnpj"
+            mask="00.000.000/0000-00"
+            [dropSpecialCharacters]="true"
+            class="input-field"
+            placeholder="00.000.000/0000-00"
+            [class.border-red-500]="isFieldInvalid('cnpj')"
+          />
+          <p *ngIf="isFieldInvalid('cnpj')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('cnpj') }}
+          </p>
+        </div>
+
+        <div>
+          <label for="address" class="block text-sm font-medium text-gray-700 mb-1">
+            Endereço *
+          </label>
+          <input
+            id="address"
+            type="text"
+            formControlName="address"
+            class="input-field"
+            [class.border-red-500]="isFieldInvalid('address')"
+          />
+          <p *ngIf="isFieldInvalid('address')" class="text-red-500 text-sm mt-1">
+            {{ getErrorMessage('address') }}
+          </p>
+        </div>
+
+        <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+          {{ successMessage }}
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span *ngIf="!isLoading">{{ isEditing ? 'Atualizar' : 'Cadastrar' }}</span>
+            <span *ngIf="isLoading">{{ isEditing ? 'Atualizando...' : 'Cadastrando...' }}</span>
+          </button>
+          
+          <button
+            type="button"
+            (click)="goBack()"
+            class="btn-secondary"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

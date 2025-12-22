@@ -1,40 +1,43 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgxMaskDirective } from 'ngx-mask';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
 import { Company } from '../../models/company.model';
-import { noAccentsValidator } from '../../validators/no-accents.validator';
 import { CnpjPipe } from '../../pipes/cnpj.pipe';
 import { CpfPipe } from '../../pipes/cpf.pipe';
 
 @Component({
   selector: 'app-companies',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CnpjPipe, CpfPipe, NgxMaskDirective],
+  imports: [CommonModule, FormsModule, CnpjPipe, CpfPipe],
   templateUrl: './companies.html',
   styleUrls: ['./companies.css']
 })
 export class CompaniesComponent implements OnInit {
   companies: Company[] = [];
-  companyForm: FormGroup;
-  isEditing = false;
-  editingId: number | null = null;
-  showForm = false;
+  filteredCompanies: Company[] = [];
+  paginatedCompanies: Company[] = [];
   showViewModal = false;
   selectedCompany: Company | null = null;
+  
+  // Pagination
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalPages: number = 0;
+  itemsPerPageOptions: number[] = [10, 25, 50];
+  
+  // Search
+  searchTerm: string = '';
+
+  // Expose Math for template
+  Math = Math;
 
   constructor(
     private companyService: CompanyService,
-    private fb: FormBuilder,
+    private router: Router,
     private cdr: ChangeDetectorRef
-  ) {
-    this.companyForm = this.fb.group({
-      name: ['', [Validators.required, noAccentsValidator()]],
-      cnpj: ['', [Validators.required, Validators.minLength(14), Validators.maxLength(14)]],
-      address: ['', Validators.required]
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     this.loadCompanies();
@@ -45,10 +48,10 @@ export class CompaniesComponent implements OnInit {
     this.companyService.getAll().subscribe({
       next: (data) => {
         console.log('Empresas recebidas:', data);
-        console.log('Tipo de data:', typeof data, Array.isArray(data));
         this.companies = data;
-        this.cdr.detectChanges(); // Força detecção de mudanças
-        console.log('companies após atribuição:', this.companies);
+        this.filteredCompanies = data;
+        this.updatePagination();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Erro ao carregar empresas:', error);
@@ -56,46 +59,62 @@ export class CompaniesComponent implements OnInit {
     });
   }
 
-  toggleForm(): void {
-    this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.resetForm();
-    }
-  }
-
-  onSubmit(): void {
-    if (this.companyForm.valid) {
-      const company: Company = this.companyForm.value;
-
-      if (this.isEditing && this.editingId) {
-        this.companyService.update(this.editingId, company).subscribe({
-          next: () => {
-            this.loadCompanies();
-            this.resetForm();
-          }
-        });
-      } else {
-        this.companyService.create(company).subscribe({
-          next: () => {
-            this.loadCompanies();
-            this.resetForm();
-          }
-        });
-      }
+  onSearch(): void {
+    if (this.searchTerm.trim() === '') {
+      this.filteredCompanies = this.companies;
     } else {
-      this.markFormGroupTouched(this.companyForm);
+      const term = this.searchTerm.toLowerCase();
+      this.filteredCompanies = this.companies.filter(company =>
+        company.name.toLowerCase().includes(term) ||
+        company.cnpj.includes(term) ||
+        company.address.toLowerCase().includes(term)
+      );
+    }
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.filteredCompanies.length / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedCompanies = this.filteredCompanies.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
     }
   }
 
-  editCompany(company: Company): void {
-    this.isEditing = true;
-    this.editingId = company.id!;
-    this.showForm = true;
-    this.companyForm.patchValue({
-      name: company.name,
-      cnpj: company.cnpj,
-      address: company.address
-    });
+  onItemsPerPageChange(): void {
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  get pages(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  newCompany(): void {
+    this.router.navigate(['/companies/new']);
+  }
+
+  editCompany(id: number): void {
+    this.router.navigate(['/companies/edit', id]);
   }
 
   deleteCompany(id: number): void {
@@ -103,39 +122,13 @@ export class CompaniesComponent implements OnInit {
       this.companyService.delete(id).subscribe({
         next: () => {
           this.loadCompanies();
+        },
+        error: (error) => {
+          console.error('Erro ao excluir empresa:', error);
+          alert('Erro ao excluir empresa. Tente novamente.');
         }
       });
     }
-  }
-
-  resetForm(): void {
-    this.companyForm.reset();
-    this.isEditing = false;
-    this.editingId = null;
-    this.showForm = false;
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.companyForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const field = this.companyForm.get(fieldName);
-    if (field?.errors) {
-      if (field.errors['required']) return 'Campo obrigatório';
-      if (field.errors['minlength']) return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
-      if (field.errors['maxlength']) return `Máximo ${field.errors['maxlength'].requiredLength} caracteres`;
-      if (field.errors['hasAccents']) return 'Não pode conter acentuação';
-    }
-    return '';
   }
 
   viewCompany(company: Company): void {
