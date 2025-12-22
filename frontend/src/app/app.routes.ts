@@ -9,11 +9,13 @@ import { LoginComponent } from './components/login/login';
 import { RegisterComponent } from './components/register/register';
 import { ProfileComponent } from './components/profile/profile';
 import { authGuard } from './guards/auth.guard';
+import { loginGuard } from './guards/login.guard';
+import { rootGuard } from './guards/root.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: '', canActivate: [rootGuard], children: [] },
+  { path: 'login', component: LoginComponent, canActivate: [loginGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [loginGuard] },
   
   { path: 'companies', component: CompaniesComponent, canActivate: [authGuard] },
   { path: 'companies/new', component: CompanyFormComponent, canActivate: [authGuard] },

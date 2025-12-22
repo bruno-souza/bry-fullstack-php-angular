@@ -1,4 +1,4 @@
-<div *ngIf="authService.isLoggedIn()">
+<ng-container *ngIf="showMenu$ | async; else noMenu">
   <header class="bg-bry-blue text-white shadow-lg">
     <div class="container mx-auto px-4 py-6">
       <h1 class="text-3xl font-bold text-center">Sistema de Gerenciamento - Bry</h1>
@@ -87,8 +87,8 @@
   <main class="container mx-auto py-8">
     <router-outlet />
   </main>
-</div>
+</ng-container>
 
-<div *ngIf="!authService.isLoggedIn()">
+<ng-template #noMenu>
   <router-outlet />
-</div>
+</ng-template>

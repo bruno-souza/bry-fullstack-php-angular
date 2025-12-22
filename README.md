@@ -82,7 +82,7 @@ docker-compose up -d --build
 
 # Acesse:
 # Backend API: http://localhost:8000/api
-# Documentação Scramble: http://localhost:8000/docs/api
+# Documentação da API: http://localhost:8000/docs/api
 # Frontend: http://localhost:4200
 # MySQL: localhost:3306
 ```
