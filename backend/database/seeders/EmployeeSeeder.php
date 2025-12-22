@@ -108,7 +108,7 @@ class EmployeeSeeder extends Seeder
             [
                 'login' => 'bry',
                 'name' => 'Bry Tecnologia S.A',
-                'cpf' => '01234567890',
+                'cpf' => '10987654321',
                 'email' => 'bry@example.com',
                 'address' => 'Rua Lauro Linhares, 2010, torre B 8º andar, Trindade - 88036-002 Florianópolis-SC',
                 'password' => Hash::make('123456'),
