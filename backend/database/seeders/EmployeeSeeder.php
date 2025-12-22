@@ -105,12 +105,21 @@ class EmployeeSeeder extends Seeder
                 'password' => Hash::make('123456'),
                 'companies' => [1, 3], // Tech Solutions e Servicos Administrativos
             ],
+            [
+                'login' => 'bry',
+                'name' => 'Bry Tecnologia S.A',
+                'cpf' => '01234567890',
+                'email' => 'bry@example.com',
+                'address' => 'Rua Lauro Linhares, 2010, torre B 8º andar, Trindade - 88036-002 Florianópolis-SC',
+                'password' => Hash::make('123456'),
+                'companies' => [1, 3], // Tech Solutions e Servicos Administrativos
+            ],
         ];
 
         foreach ($employees as $employeeData) {
             $companies = $employeeData['companies'];
             unset($employeeData['companies']);
-            
+
             $employee = Employee::create($employeeData);
             $employee->companies()->attach($companies);
         }
