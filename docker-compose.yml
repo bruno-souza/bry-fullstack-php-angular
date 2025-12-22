@@ -53,6 +53,24 @@ services:
     networks:
       - bry_network
 
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: bry_phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: laravel
+      PMA_PASSWORD: laravel
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - bry_network
+
 volumes:
   backend_storage:
   backend_cache:

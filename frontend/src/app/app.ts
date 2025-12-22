@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationStart } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService } from './services/auth.service';
-import { filter, map } from 'rxjs/operators';
-import { Observable, combineLatest } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -11,40 +10,30 @@ import { Observable, combineLatest } from 'rxjs';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class App implements OnInit {
   showUserMenu = false;
-  currentUrl = '';
-  showMenu$: Observable<boolean>;
+  showMenu = true;
 
   constructor(
     public authService: AuthService,
     private router: Router
-  ) {
-    // Inicializa com a URL atual
-    this.currentUrl = this.router.url;
-    
-    // Atualiza currentUrl quando a navegação começar
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationStart)
-    ).subscribe((event: any) => {
-      this.currentUrl = event.url;
-    });
+  ) {}
 
-    // Observable que determina se deve mostrar o menu
-    const initialUrl = this.router.url || '';
-    const initialIsAuthRoute = initialUrl === '/login' || initialUrl === '/register' || initialUrl === '/' || initialUrl === '';
-    const initialShowMenu = this.authService.isLoggedIn() && !initialIsAuthRoute;
+  ngOnInit(): void {
+    // Verifica a rota inicial
+    this.checkRoute(this.router.url);
     
-    this.showMenu$ = this.authService.currentUser.pipe(
-      map(user => {
-        const isAuthRoute = this.currentUrl === '/login' || this.currentUrl === '/register' || this.currentUrl === '/' || this.currentUrl === '';
-        return !!user && !isAuthRoute;
-      })
-    );
+    // Monitora mudanças de rota
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.checkRoute(event.url);
+    });
   }
 
-  isAuthRoute(): boolean {
-    return this.currentUrl === '/login' || this.currentUrl === '/register' || this.currentUrl === '/' || this.currentUrl === '';
+  checkRoute(url: string): void {
+    // Esconde o menu apenas nas rotas /login e /register
+    this.showMenu = !(url.includes('/login') || url.includes('/register'));
   }
 
   toggleUserMenu(): void {

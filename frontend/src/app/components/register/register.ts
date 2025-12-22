@@ -17,19 +17,12 @@ export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   errorMessage: string = '';
   isLoading: boolean = false;
-  shouldShowRegister: boolean = true;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
   ) {
-    // Verifica antes mesmo de criar o form
-    if (this.authService.isLoggedIn()) {
-      this.shouldShowRegister = false;
-      this.router.navigate(['/companies']);
-    }
-    
     this.registerForm = this.fb.group({
       login: ['', [Validators.required, noAccentsValidator()]],
       name: ['', [Validators.required, noAccentsValidator()]],
@@ -41,10 +34,6 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.authService.isLoggedIn()) {
-      this.shouldShowRegister = false;
-      this.router.navigate(['/companies']);
-    }
   }
 
   onSubmit(): void {

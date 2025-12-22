@@ -15,19 +15,12 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   errorMessage: string = '';
   isLoading: boolean = false;
-  shouldShowLogin: boolean = true;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
   ) {
-    // Verifica antes mesmo de criar o form
-    if (this.authService.isLoggedIn()) {
-      this.shouldShowLogin = false;
-      this.router.navigate(['/companies']);
-    }
-    
     this.loginForm = this.fb.group({
       login: ['', Validators.required],
       password: ['', Validators.required]
@@ -35,10 +28,6 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.authService.isLoggedIn()) {
-      this.shouldShowLogin = false;
-      this.router.navigate(['/companies']);
-    }
   }
 
   onSubmit(): void {
