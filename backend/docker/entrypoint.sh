@@ -26,5 +26,8 @@ php artisan migrate --force || true
 echo "🌱 Rodando seeders..."
 php artisan db:seed --force || true
 
+echo "🔗 Criando link simbólico do storage..."
+php artisan storage:link --force || true
+
 echo "🚀 Iniciando Apache..."
 exec apache2-foreground

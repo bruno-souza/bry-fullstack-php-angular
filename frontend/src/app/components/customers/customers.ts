@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CustomerService } from '../../services/customer.service';
+import { AuthService } from '../../services/auth.service';
 import { Customer } from '../../models/customer.model';
 import { CpfPipe } from '../../pipes/cpf.pipe';
 import { CnpjPipe } from '../../pipes/cnpj.pipe';
@@ -35,6 +36,7 @@ export class CustomersComponent implements OnInit {
 
   constructor(
     private customerService: CustomerService,
+    private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -121,13 +123,18 @@ export class CustomersComponent implements OnInit {
 
   deleteCustomer(id: number): void {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
-      this.customerService.delete(id).subscribe({
+      const currentUserId = this.authService.currentUserValue?.id;
+      this.customerService.delete(id, currentUserId).subscribe({
         next: () => {
           this.loadCustomers();
         },
         error: (error) => {
           console.error('Erro ao excluir cliente:', error);
-          alert('Erro ao excluir cliente. Tente novamente.');
+          if (error.status === 403) {
+            alert(error.error.message || 'Você não pode deletar a si próprio. Entre em contato com um administrador.');
+          } else {
+            alert('Erro ao excluir cliente. Tente novamente.');
+          }
         }
       });
     }

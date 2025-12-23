@@ -44,7 +44,8 @@ export class CustomerService {
   }
 
   // Deleta um cliente
-  delete(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  delete(id: number, currentUserId?: number): Observable<any> {
+    const body = currentUserId ? { current_user_id: currentUserId } : {};
+    return this.http.delete(`${this.apiUrl}/${id}`, { body });
   }
 }

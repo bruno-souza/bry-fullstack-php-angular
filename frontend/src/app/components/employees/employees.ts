@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EmployeeService } from '../../services/employee.service';
+import { AuthService } from '../../services/auth.service';
 import { Employee } from '../../models/employee.model';
 import { CpfPipe } from '../../pipes/cpf.pipe';
 import { CnpjPipe } from '../../pipes/cnpj.pipe';
@@ -35,6 +36,7 @@ export class EmployeesComponent implements OnInit {
 
   constructor(
     private employeeService: EmployeeService,
+    private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -121,13 +123,18 @@ export class EmployeesComponent implements OnInit {
 
   deleteEmployee(id: number): void {
     if (confirm('Tem certeza que deseja excluir este funcionário?')) {
-      this.employeeService.delete(id).subscribe({
+      const currentUserId = this.authService.currentUserValue?.id;
+      this.employeeService.delete(id, currentUserId).subscribe({
         next: () => {
           this.loadEmployees();
         },
         error: (error) => {
           console.error('Erro ao excluir funcionário:', error);
-          alert('Erro ao excluir funcionário. Tente novamente.');
+          if (error.status === 403) {
+            alert(error.error.message || 'Você não pode deletar a si próprio. Entre em contato com um administrador.');
+          } else {
+            alert('Erro ao excluir funcionário. Tente novamente.');
+          }
         }
       });
     }

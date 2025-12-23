@@ -173,7 +173,7 @@ class CustomerController extends Controller
     /**
      * Remove um cliente
      */
-    public function destroy(string $id): JsonResponse
+    public function destroy(string $id, Request $request): JsonResponse
     {
         try {
             $customer = Customer::find($id);
@@ -182,6 +182,14 @@ class CustomerController extends Controller
                 return response()->json([
                     'message' => 'Customer not found'
                 ], 404);
+            }
+
+            // Impede que o usuário logado delete a si próprio
+            $currentUser = $request->input('current_user_id');
+            if ($currentUser && $customer->id == $currentUser) {
+                return response()->json([
+                    'message' => 'You cannot delete yourself. Please contact an administrator.'
+                ], 403);
             }
 
             // Remove documento se existir
